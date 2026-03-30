@@ -120,7 +120,7 @@ Private Sub BuildMuestrasPorMes()
             On Error Resume Next
             ThisWorkbook.Names(nmUniv).Delete
             On Error GoTo 0
-            ThisWorkbook.Names.Add name:=nmUniv, refersTo:="=" & wsM.name & "!$N$" & rowU
+            ThisWorkbook.Names.Add Name:=nmUniv, refersTo:="=" & wsM.Name & "!$N$" & rowU
 
             f = "=CONTAR.SI.CONJUNTO(" & _
                 "Ordenes[Fecha];"">=""&FECHA(" & y0 & ";" & m0 & ";1);" & _
@@ -145,7 +145,7 @@ Private Sub BuildMuestrasPorMes()
             On Error Resume Next
             ThisWorkbook.Names(nmMues).Delete
             On Error GoTo 0
-            ThisWorkbook.Names.Add name:=nmMues, refersTo:="=" & wsM.name & "!$H$" & rowM
+            ThisWorkbook.Names.Add Name:=nmMues, refersTo:="=" & wsM.Name & "!$H$" & rowM
 
             .FormulaLocal = "=REDONDEAR.MAS((" & nmUniv & "*Z^2*p*(1-p))/(( " & nmUniv & " -1)*E^2+Z^2*p*(1-p));0)"
         End With
@@ -214,3 +214,5 @@ Private Function MesAbrevES(ByVal m As Long) As String
         Case Else: MesAbrevES = "Mes"
     End Select
 End Function
+
+

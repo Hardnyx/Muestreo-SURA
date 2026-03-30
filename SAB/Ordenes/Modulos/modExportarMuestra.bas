@@ -24,6 +24,12 @@ Public Sub GenerarTablas()
         MsgBox "Falta el nombre definido 'InicioMuestra'.", vbExclamation: Exit Sub
     End If
 
+    If IsEmpty(ancla.Value) Or Len(Trim$(CStr(ancla.Value))) = 0 Then
+        MsgBox "No se han generado los números de muestra." & vbCrLf & _
+               "Primero ejecute 'Seleccionar Muestras'.", vbExclamation, "Sin muestra"
+        Exit Sub
+    End If
+
     Application.ScreenUpdating = False
     Application.EnableEvents = False
     Application.DisplayAlerts = False
@@ -32,7 +38,7 @@ Public Sub GenerarTablas()
     k = 0
     Do
         Dim hdr As Range, lbl As String, y As Long, m As Long
-        Set hdr = ancla.Offset(0, 6 * k)
+        Set hdr = ancla.offset(0, 6 * k)
         lbl = CStr(hdr.Value)
 
         If Len(lbl) = 0 Then Exit Do
@@ -41,7 +47,7 @@ Public Sub GenerarTablas()
 
         ' Lee números de muestra debajo (dos filas abajo) en bloque de 5 columnas
         Dim nums() As Long
-        nums = LeerNumerosDeMuestra(ancla.Offset(2, 6 * k))
+        nums = LeerNumerosDeMuestra(ancla.offset(2, 6 * k))
         If UBoundSafe(nums) = 0 Then GoTo SiguienteMes
 
         ' Filtra filas del mes y ordénalas por Fecha y Hora (y descarta NºOrden vacío)
@@ -91,7 +97,7 @@ Private Function LeerNumerosDeMuestra(startCell As Range) As Long()
     Do
         Dim filaVacia As Boolean: filaVacia = True
         For c = 0 To 4
-            v = startCell.Offset(R, c).Value
+            v = startCell.offset(R, c).Value
             If Len(v) > 0 Then
                 filaVacia = False
                 If IsNumeric(v) Then
@@ -194,7 +200,7 @@ Private Sub ExportarFilas(lo As ListObject, ByRef selIdx() As Long, _
     On Error GoTo 0
 
     Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
-    ws.name = sheetName
+    ws.Name = sheetName
 
     ' Encabezados
     Dim headers As Variant
@@ -213,7 +219,7 @@ Private Sub ExportarFilas(lo As ListObject, ByRef selIdx() As Long, _
     ' Crear tabla
     Dim loT As ListObject
     Set loT = ws.ListObjects.Add(xlSrcRange, ws.Range("A1").CurrentRegion, , xlYes)
-    loT.name = tableName
+    loT.Name = tableName
 
     ' Estilo de tabla: Claro 9 (TableStyleLight9). Intento en inglés y, si falla, en español.
     On Error Resume Next

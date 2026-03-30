@@ -7,7 +7,7 @@ End Sub
 
 Private Sub GenerarTablas()
     On Error Resume Next
-    ExportarMuestra
+    modExportarMuestra.GenerarTablas
     If Err.Number <> 0 Then
         MsgBox "No encontré 'ExportarMuestra'.", vbExclamation
         Err.Clear
@@ -47,7 +47,7 @@ Public Sub CargarOrdenes_PQ()
 
     Set lo = ws.ListObjects.Add(SourceType:=0, Source:=connStr, Destination:=ws.Range("A1"))
     With lo
-        .name = "Ordenes"
+        .Name = "Ordenes"
         With .QueryTable
             .CommandType = xlCmdSql
             .CommandText = cmdText
@@ -65,6 +65,7 @@ Public Sub CargarOrdenes_PQ()
     With EnsureSheet("Muestra")
         .Range("N3").FormulaLocal = "=CONTARA(Ordenes[NºOrden])"
         SafeDefineName "Universo", .Range("N3").Address(True, True, xlA1, True)
+        .Range("H3").FormulaLocal = "=REDONDEAR.MAS((Universo*Z^2*p*(1-p))/((Universo-1)*E^2+Z^2*p*(1-p));0)"
     End With
 
     On Error Resume Next
@@ -122,7 +123,7 @@ Private Sub ResetOrdenesEnvironment(ByRef wsOut As Worksheet)
     On Error GoTo 0
     If wsOut Is Nothing Then
         Set wsOut = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
-        wsOut.name = "Ordenes"
+        wsOut.Name = "Ordenes"
     Else
         wsOut.Cells.Clear
     End If
@@ -134,7 +135,7 @@ Private Sub UpsertQuery(ByVal qName As String, ByVal mCode As String)
     Set q = ThisWorkbook.Queries(qName)
     On Error GoTo 0
     If q Is Nothing Then
-        ThisWorkbook.Queries.Add name:=qName, Formula:=mCode
+        ThisWorkbook.Queries.Add Name:=qName, Formula:=mCode
     Else
         q.Formula = mCode
     End If
@@ -262,7 +263,12 @@ Private Function M_Ordenes_PQ_Spanish(ByVal ruta As String) As String
     m = m & "    let" & vbCrLf
     m = m & "      s0 = Text.Trim(t)," & vbCrLf
     m = m & "      s1 = Text.Lower(s0)," & vbCrLf
-    m = m & "      s2 = Text.Replace(Text.Replace(Text.Replace(s1, ""/"", "" ""), ""-"", "" ""), ""."", """")," & vbCrLf
+    m = m & "      isC9 = (Text.Length(s1) = 9) and (try (Number.From(Text.Start(s1,2)) >= 1) otherwise false) and (try (Number.From(Text.End(s1,4)) >= 1000) otherwise false)," & vbCrLf
+    m = m & "      isC8 = (Text.Length(s1) = 8) and (try (Number.From(Text.Start(s1,1)) >= 1) otherwise false) and (try (Number.From(Text.End(s1,4)) >= 1000) otherwise false)," & vbCrLf
+    m = m & "      sExp = if isC9 then Text.Start(s1,2) & "" "" & Text.Middle(s1,2,3) & "" "" & Text.End(s1,4)" & vbCrLf
+    m = m & "             else if isC8 then Text.Start(s1,1) & "" "" & Text.Middle(s1,1,3) & "" "" & Text.End(s1,4)" & vbCrLf
+    m = m & "             else s1," & vbCrLf
+    m = m & "      s2 = Text.Replace(Text.Replace(Text.Replace(sExp, ""/"", "" ""), ""-"", "" ""), ""."", """")," & vbCrLf
     m = m & "      parts = List.Select(Text.Split(s2, "" ""), each _ <> """")," & vbCrLf
     m = m & "      s3 = Text.Combine(parts, "" "")," & vbCrLf
     m = m & "      s4 = "" "" & s3 & "" "", " & vbCrLf
@@ -318,7 +324,7 @@ Private Function M_Ordenes_PQ_Spanish(ByVal ruta As String) As String
 
     ' === ÚNICO CAMBIO: ordenar por Fecha y Hora ===
     m = m & "  Final = Table.TransformColumnTypes(HoraFix, {{""Precio"", type text},{""Tasa"", type text},{""Plazo"", type text}}, ""es-PE"")," & vbCrLf
-    m = m & "  Sorted = Table.Sort(Final, {{""Fecha"", Order.Ascending}, {""Hora"", Order.Ascending}})" & vbCrLf
+    m = m & "  Sorted = Table.Sort(Final, {{""Fecha"", Order.Ascending}, {""Hora"", Order.Ascending}, {""NºOrden"", Order.Ascending}})" & vbCrLf
     m = m & "in" & vbCrLf
     m = m & "  Sorted" & vbCrLf
 

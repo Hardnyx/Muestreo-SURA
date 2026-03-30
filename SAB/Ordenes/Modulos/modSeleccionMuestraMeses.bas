@@ -3,23 +3,115 @@ Option Explicit
 ' ========= ENTRADA DEL BOTÓN =========
 Public Sub SeleccionMuestra()
     Dim resp As VbMsgBoxResult
-    resp = MsgBox("¿Está seguro de generar nuevas muestras por mes?", vbYesNo + vbQuestion, "Confirmar")
+    resp = MsgBox("¿Está seguro de generar nuevas muestras?", vbYesNo + vbQuestion, "Confirmar")
     If resp <> vbYes Then Exit Sub
+
+    Dim nMeses As Long
+    nMeses = ContarMesesEnOrdenes()
+
+    Dim modoCombinado As Boolean
+    If nMeses > 1 Then
+        resp = MsgBox( _
+            "Se detectaron " & nMeses & " meses en el archivo." & vbCrLf & vbCrLf & _
+            "¿Desea generar una muestra única combinada para todos los meses?" & vbCrLf & _
+            "Sí = Muestra única     No = Muestra por mes", _
+            vbYesNo + vbQuestion, "Modo de muestreo")
+        modoCombinado = (resp = vbYes)
+    Else
+        modoCombinado = False
+    End If
 
     Application.ScreenUpdating = False
     Application.Calculation = xlCalculationManual
     Application.EnableEvents = False
 
     On Error GoTo FIN
-    Call SeleccionMuestra_PorMes
-
-    MsgBox "Muestras por mes generadas correctamente.", vbInformation
+    If modoCombinado Then
+        Call SeleccionMuestra_Combinada
+    Else
+        Call SeleccionMuestra_PorMes
+    End If
+    MsgBox "Muestras generadas correctamente.", vbInformation
 
 FIN:
     Application.EnableEvents = True
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
 End Sub
+
+' ========= MODO COMBINADO (un solo bloque con todo el universo) =========
+Private Sub SeleccionMuestra_Combinada()
+    Dim w As Workbook: Set w = ThisWorkbook
+    Dim wsM As Worksheet: Set wsM = w.Worksheets("Muestra")
+
+    Dim inicio As Range
+    Set inicio = ResolveInicioMuestraCell(w)
+    If inicio Is Nothing Then
+        MsgBox "No encuentro una celda nombrada 'InicioMuestra'.", vbCritical
+        Exit Sub
+    End If
+
+    Dim baseFmt As Range: Set baseFmt = inicio.offset(2, 0)
+
+    Dim universo As Long
+    If Not NameToLongSafe(w, "Universo", universo) Then
+        MsgBox "No encuentro el nombre definido 'Universo' con valor numérico.", vbCritical
+        Exit Sub
+    End If
+
+    Dim tamano As Long
+    Dim vH As Variant: vH = wsM.Range("H3").Value
+    If Not IsNumeric(vH) Or CDbl(vH) <= 0 Then
+        MsgBox "El tamaño de muestra en H3 de la hoja Muestra no es válido.", vbCritical
+        Exit Sub
+    End If
+    tamano = CLng(vH)
+
+    If universo <= 0 Or tamano > universo Then
+        MsgBox "Universo o tamaño de muestra inválidos (Universo=" & universo & _
+               ", Muestra=" & tamano & ").", vbCritical
+        Exit Sub
+    End If
+
+    ClearFormatsFromAnchor wsM, baseFmt
+    ClearBlockContents wsM, baseFmt, 5
+
+    inicio.Value = "Muestra Total - Todos los meses"
+    inicio.Font.Bold = True
+
+    Dim nums() As Long
+    nums = UniqueSortedSample(universo, tamano)
+    WriteGrid wsM, baseFmt, nums, 5, baseFmt
+End Sub
+
+' ========= CONTAR MESES DISTINTOS EN Ordenes[Fecha] =========
+Private Function ContarMesesEnOrdenes() As Long
+    Dim wsO As Worksheet
+    On Error Resume Next
+    Set wsO = ThisWorkbook.Worksheets("Ordenes")
+    On Error GoTo 0
+    If wsO Is Nothing Then Exit Function
+
+    Dim lo As ListObject
+    On Error Resume Next
+    Set lo = wsO.ListObjects("Ordenes")
+    On Error GoTo 0
+    If lo Is Nothing Then Exit Function
+    If lo.ListColumns("Fecha").DataBodyRange Is Nothing Then Exit Function
+    If WorksheetFunction.CountA(lo.ListColumns("Fecha").DataBodyRange) = 0 Then Exit Function
+
+    Dim arr, R As Long, dict As Object
+    arr = lo.ListColumns("Fecha").DataBodyRange.Value
+    Set dict = CreateObject("Scripting.Dictionary")
+    For R = 1 To UBound(arr, 1)
+        If IsDate(arr(R, 1)) Then
+            Dim yy As Integer, mm As Integer
+            yy = Year(arr(R, 1)): mm = Month(arr(R, 1))
+            dict(yy & "-" & Format$(mm, "00")) = True
+        End If
+    Next R
+    ContarMesesEnOrdenes = dict.Count
+End Function
 
 ' ========= LÓGICA PRINCIPAL =========
 Private Sub SeleccionMuestra_PorMes()
@@ -37,7 +129,7 @@ Private Sub SeleccionMuestra_PorMes()
 
     ' Celda base de FORMATO: dos filas debajo de InicioMuestra (se usará para TODAS las celdas numéricas)
     Dim baseFmt As Range
-    Set baseFmt = inicio.Offset(2, 0)
+    Set baseFmt = inicio.offset(2, 0)
 
     ' === 1) Detectar meses presentes en Ordenes[Fecha] ===
     Dim lo As ListObject
@@ -105,12 +197,13 @@ Private Sub SeleccionMuestra_PorMes()
 
         ' Bloque del mes: desplazar 6 columnas por mes respecto al inicio
         Dim colOffset As Long: colOffset = 6 * idx
-        Dim celTitulo As Range: Set celTitulo = inicio.Offset(0, colOffset)
-        Dim celInicioNums As Range: Set celInicioNums = inicio.Offset(2, colOffset) ' dos filas abajo
+        Dim celTitulo As Range: Set celTitulo = inicio.offset(0, colOffset)
+        Dim celInicioNums As Range: Set celInicioNums = inicio.offset(2, colOffset) ' dos filas abajo
 
         ' 2.1) Título
         celTitulo.Value = "Muestra Mes " & (idx + 1) & " - " & MesAbrevES_mSM(m0) & " " & y0
-
+        celTitulo.Font.Bold = True
+        
         ' 2.2) Limpiar SOLO contenidos previos del bloque de números (5 columnas)
         ClearBlockContents wsM, celInicioNums, 5
 
@@ -138,7 +231,7 @@ End Sub
 
 ' Resuelve la celda nombrada "InicioMuestra" o "Inicio muestra".
 Private Function ResolveInicioMuestraCell(w As Workbook) As Range
-    Dim nm As name
+    Dim nm As Name
     On Error Resume Next
     Set nm = w.Names("InicioMuestra")
     If nm Is Nothing Then Set nm = w.Names("Inicio muestra")
@@ -194,13 +287,27 @@ End Sub
 
 ' Escribe un vector en grilla de nCols columnas, copiando formatoBase a cada celda.
 Private Sub WriteGrid(ws As Worksheet, startCell As Range, ByRef v() As Long, ByVal nCols As Long, formatBase As Range)
-    Dim i As Long, R As Long, c As Long
+    Dim i As Long, R As Long, c As Long, cel As Range
     R = startCell.Row: c = startCell.Column
     For i = LBound(v) To UBound(v)
-        ws.Cells(R, c).Value = v(i)
+        Set cel = ws.Cells(R, c)
+        cel.Value = v(i)
+
         formatBase.Copy
-        ws.Cells(R, c).PasteSpecial Paste:=xlPasteFormats
+        cel.PasteSpecial Paste:=xlPasteFormats
         Application.CutCopyMode = False
+
+        With cel
+            .HorizontalAlignment = xlCenter
+            Dim b As Byte
+            For b = xlEdgeLeft To xlEdgeRight   ' constantes 7-10: izq, derecha, arriba, abajo
+                With .Borders(b)
+                    .LineStyle = xlDot
+                    .Weight = xlThin
+                    .Color = RGB(128, 128, 128)
+                End With
+            Next b
+        End With
 
         c = c + 1
         If c > startCell.Column + (nCols - 1) Then
@@ -234,7 +341,7 @@ End Function
 
 ' Lee un nombre definido y lo convierte a Long de forma segura.
 Private Function NameToLongSafe(w As Workbook, ByVal nm As String, ByRef outVal As Long) As Boolean
-    Dim n As name
+    Dim n As Name
     On Error Resume Next
     Set n = w.Names(nm)
     On Error GoTo 0

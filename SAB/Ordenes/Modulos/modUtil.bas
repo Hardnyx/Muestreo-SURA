@@ -8,7 +8,7 @@ Public Function EnsureSheet(ByVal nm As String) As Worksheet
     On Error GoTo 0
     If sh Is Nothing Then
         Set sh = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
-        sh.name = nm
+        sh.Name = nm
     End If
     Set EnsureSheet = sh
 End Function
@@ -17,7 +17,7 @@ Public Sub SafeDefineName(ByVal nm As String, ByVal refersToA1 As String)
     On Error Resume Next
     ThisWorkbook.Names(nm).Delete
     On Error GoTo 0
-    ThisWorkbook.Names.Add name:=nm, refersTo:="=" & refersToA1
+    ThisWorkbook.Names.Add Name:=nm, refersTo:="=" & refersToA1
 End Sub
 
 Public Sub ApplyLikeTemplate(tpl As Range, dst As Range, Optional ByVal mergeCells As Boolean = False)
@@ -27,7 +27,7 @@ Public Sub ApplyLikeTemplate(tpl As Range, dst As Range, Optional ByVal mergeCel
         .HorizontalAlignment = tpl.HorizontalAlignment
         .VerticalAlignment = tpl.VerticalAlignment
         .WrapText = tpl.WrapText
-        .Font.name = tpl.Font.name
+        .Font.Name = tpl.Font.Name
         .Font.Size = tpl.Font.Size
         .Font.Bold = tpl.Font.Bold
         .Font.Color = tpl.Font.Color
@@ -49,7 +49,7 @@ Public Sub StoreMuestrasEndRow(ws As Worksheet, ByVal R As Long)
 End Sub
 
 Public Function GetMuestrasEndRow(ws As Worksheet, ByVal defaultRow As Long) As Long
-    Dim nm As name
+    Dim nm As Name
     On Error Resume Next
     Set nm = ThisWorkbook.Names("MuestrasEndRow")
     On Error GoTo 0
