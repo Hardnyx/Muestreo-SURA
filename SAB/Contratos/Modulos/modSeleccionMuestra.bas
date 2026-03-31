@@ -11,8 +11,8 @@ Public Sub SeleccionMuestra()
     If resp <> vbYes Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.Calculation    = xlCalculationManual
-    Application.EnableEvents   = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
 
     On Error GoTo FIN
 
@@ -22,8 +22,8 @@ Public Sub SeleccionMuestra()
     MsgBox "Muestras PN y PJ generadas correctamente.", vbInformation
 
 FIN:
-    Application.EnableEvents   = True
-    Application.Calculation    = xlCalculationAutomatic
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
 End Sub
 
@@ -51,7 +51,7 @@ Private Sub GenerarMuestra(ByVal nombreInicio As String, _
 
     ' Leer tamaño y universo
     On Error Resume Next
-    tamano   = CLng(wb.Names(nombreTamano).RefersToRange.Value)
+    tamano = CLng(wb.Names(nombreTamano).RefersToRange.Value)
     universo = CLng(wb.Names(nombreUniverso).RefersToRange.Value)
     On Error GoTo 0
 
@@ -131,8 +131,8 @@ Private Sub WriteGrid(ws As Worksheet, startCell As Range, _
         For b = xlEdgeLeft To xlEdgeRight   ' 7, 8, 9, 10
             With cel.Borders(b)
                 .LineStyle = xlDot
-                .Weight    = xlThin
-                .Color     = RGB(128, 128, 128)
+                .Weight = xlThin
+                .Color = RGB(128, 128, 128)
             End With
         Next b
 
@@ -143,3 +143,5 @@ Private Sub WriteGrid(ws As Worksheet, startCell As Range, _
         End If
     Next i
 End Sub
+
+

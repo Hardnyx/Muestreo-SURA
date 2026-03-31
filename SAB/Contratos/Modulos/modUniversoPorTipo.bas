@@ -20,9 +20,9 @@ Public Sub TamañoPoblacion()
     Dim fechaVal As Variant, tipoVal As String, initial As String
 
     On Error GoTo ErrHandler
-    Application.EnableEvents   = False
+    Application.EnableEvents = False
     Application.ScreenUpdating = False
-    Application.Calculation    = xlCalculationManual
+    Application.Calculation = xlCalculationManual
 
     ' --- Hojas y tabla ---
     On Error Resume Next
@@ -40,9 +40,9 @@ Public Sub TamañoPoblacion()
     ' --- Leer filtros desde la hoja Muestra ---
     On Error Resume Next
     tipoInforme = UCase$(Trim$(CStr(wb.Names("TipoInforme").RefersToRange.Value)))
-    anioFiltro  = CLng(wb.Names("Año").RefersToRange.Value)
+    anioFiltro = CLng(wb.Names("Año").RefersToRange.Value)
     If tipoInforme = "MENSUAL" Then
-        mesTexto  = Trim$(CStr(wb.Names("Mes").RefersToRange.Value))
+        mesTexto = Trim$(CStr(wb.Names("Mes").RefersToRange.Value))
         mesFiltro = MesNumero(mesTexto)
     Else
         mesFiltro = 0   ' 0 = todos los meses del año
@@ -52,8 +52,8 @@ Public Sub TamañoPoblacion()
     If anioFiltro = 0 Then GoTo Cleanup
 
     ' --- Localizar columnas ---
-    fechaCol = ColIdx(lo, "Fecha")
-    tipoCol  = ColIdx(lo, "Tipo Persona")
+    fechaCol = ColIdx(lo, "Fecha de Ingreso")
+    tipoCol = ColIdx(lo, "Tipo")
 
     If fechaCol = 0 Then
         MsgBox "No se encontró la columna 'Fecha' en la tabla 'Contratos'.", vbCritical
@@ -87,21 +87,21 @@ Public Sub TamañoPoblacion()
 
     ' --- Guardar resultados ---
     On Error Resume Next
-    wb.Names("TamañoPob").RefersToRange.Value   = total
-    wb.Names("UniversoPN").RefersToRange.Value  = contN
-    wb.Names("UniversoPJ").RefersToRange.Value  = contJ
+    wb.Names("TamañoPob").RefersToRange.Value = total
+    wb.Names("UniversoPN").RefersToRange.Value = contN
+    wb.Names("UniversoPJ").RefersToRange.Value = contJ
     On Error GoTo 0
 
 Cleanup:
-    Application.Calculation    = xlCalculationAutomatic
+    Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
-    Application.EnableEvents   = True
+    Application.EnableEvents = True
     Exit Sub
 
 ErrHandler:
-    Application.Calculation    = xlCalculationAutomatic
+    Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
-    Application.EnableEvents   = True
+    Application.EnableEvents = True
     MsgBox "Error en TamañoPoblacion: " & Err.Number & " - " & Err.Description, vbCritical
 End Sub
 
@@ -115,12 +115,12 @@ Public Function ColIdx(lo As ListObject, ByVal colName As String) As Long
     Dim i As Long, low As String, nm As String
     low = LCase$(colName)
     For i = 1 To lo.ListColumns.Count
-        If StrComp(lo.ListColumns(i).Name, colName, vbTextCompare) = 0 Then
+        If StrComp(lo.ListColumns(i).name, colName, vbTextCompare) = 0 Then
             ColIdx = i: Exit Function
         End If
     Next i
     For i = 1 To lo.ListColumns.Count
-        nm = LCase$(lo.ListColumns(i).Name)
+        nm = LCase$(lo.ListColumns(i).name)
         If InStr(nm, low) > 0 Then
             ColIdx = i: Exit Function
         End If
@@ -146,3 +146,4 @@ Public Function MesNumero(ByVal s As String) As Long
         Case Else:  MesNumero = 0
     End Select
 End Function
+

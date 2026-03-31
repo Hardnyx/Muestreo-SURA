@@ -25,9 +25,9 @@ Public Sub EliminarDatos()
     If resp <> vbYes Then Exit Sub
 
     Application.ScreenUpdating = False
-    Application.EnableEvents  = False
+    Application.EnableEvents = False
     Application.DisplayAlerts = False
-    Application.Calculation   = xlCalculationManual
+    Application.Calculation = xlCalculationManual
 
     On Error GoTo FIN
 
@@ -35,20 +35,20 @@ Public Sub EliminarDatos()
     EliminarConexionesYConsultas
     LimpiarHojaMuestra
 
-    Application.DisplayAlerts  = True
-    Application.EnableEvents   = True
+    Application.DisplayAlerts = True
+    Application.EnableEvents = True
     Application.ScreenUpdating = True
-    Application.Calculation    = xlCalculationAutomatic
+    Application.Calculation = xlCalculationAutomatic
 
     MsgBox "El archivo ha sido limpiado y está listo para recibir nuevos datos.", _
            vbInformation, "Listo"
     Exit Sub
 
 FIN:
-    Application.DisplayAlerts  = True
-    Application.EnableEvents   = True
+    Application.DisplayAlerts = True
+    Application.EnableEvents = True
     Application.ScreenUpdating = True
-    Application.Calculation    = xlCalculationAutomatic
+    Application.Calculation = xlCalculationAutomatic
     If Err.Number <> 0 Then
         MsgBox "Error inesperado durante la limpieza:" & vbCrLf & Err.Description, _
                vbCritical, "Error"
@@ -61,7 +61,7 @@ End Sub
 Private Sub EliminarHojas()
     Dim i As Long
     For i = ThisWorkbook.Worksheets.Count To 1 Step -1
-        If Not EsHojaProtegida(ThisWorkbook.Worksheets(i).Name) Then
+        If Not EsHojaProtegida(ThisWorkbook.Worksheets(i).name) Then
             ThisWorkbook.Worksheets(i).Delete
         End If
     Next i
@@ -130,7 +130,7 @@ End Sub
 ' Vacía solo el contenido de la celda a la que apunta un nombre definido.
 ' Conserva el formato. No hace nada si el nombre no existe.
 Private Sub LimpiarCeldaNombre(ByVal nmNombre As String)
-    Dim nm As Name, cel As Range
+    Dim nm As name, cel As Range
     On Error Resume Next
     Set nm = ThisWorkbook.Names(nmNombre)
     On Error GoTo 0
@@ -145,7 +145,7 @@ End Sub
 ' apuntada por nmNombre (nCols columnas de ancho, hacia abajo).
 ' Usa .Clear para eliminar también el formato punteado.
 Private Sub LimpiarGrillaMuestra(ByVal nmNombre As String, ByVal nCols As Long)
-    Dim nm As Name
+    Dim nm As name
     On Error Resume Next
     Set nm = ThisWorkbook.Names(nmNombre)
     On Error GoTo 0
@@ -175,3 +175,5 @@ Private Sub LimpiarGrillaMuestra(ByVal nmNombre As String, ByVal nCols As Long)
     On Error GoTo 0
     rng.Clear
 End Sub
+
+
